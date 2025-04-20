@@ -1,3 +1,4 @@
+
 {
   "name": "sobani-gpt",
   "version": "1.0.0",
@@ -8,7 +9,7 @@
   "dependencies": {
     "axios": "^1.5.0",
     "express": "^4.18.2",
-    "line-bot-sdk": "^7.2.1",
+    "line-bot-sdk": "^6.11.0",
     "dotenv": "^16.0.3"
   }
 }
