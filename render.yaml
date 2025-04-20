@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: sobani-gpt
+    env: node
+    buildCommand: npm install
+    startCommand: node index.js
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    nodeVersion: 18
