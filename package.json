@@ -3,12 +3,14 @@
   "name": "sobani-gpt",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-  "@line/bot-sdk": "^7.4.0",
-  "axios": "^1.6.7"
-}
-
+    "express": "^4.18.2",             ← これを追加！
+    "axios": "^1.4.0",
+    "@line/bot-sdk": "^7.5.2",
+    "dotenv": "^16.0.3"
+  }
 }
