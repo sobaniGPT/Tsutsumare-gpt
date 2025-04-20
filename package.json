@@ -8,7 +8,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",             ← これを追加！
+    "express": "^4.18.2", 
     "axios": "^1.4.0",
     "@line/bot-sdk": "^7.5.2",
     "dotenv": "^16.0.3"
