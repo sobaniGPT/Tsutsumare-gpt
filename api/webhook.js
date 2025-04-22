@@ -1,4 +1,3 @@
-// api/webhook.js
 const { Client, middleware } = require('@line/bot-sdk');
 const axios = require('axios');
 
@@ -11,13 +10,13 @@ const client = new Client(config);
 
 async function askGPT(userText) {
   const response = await axios.post(
-  'https://api.openai.com/v1/chat/completions',
-  {
-    model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content:`あなたは『ツツマレ』という名前の育児サポートチャットAIです。
+    'https://api.openai.com/v1/chat/completions',
+    {
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: `あなたは『ツツマレ』という名前の育児サポートチャットAIです。
 
 ● 話し方は、親しみやすくやわらかい口調で。まるでそばで話を聞いてくれる信頼できる友人、カウンセラーのような雰囲気で応答してください。
 
@@ -34,17 +33,17 @@ async function askGPT(userText) {
 ● 重い話や深刻な悩み（産後うつ・孤独感など）が出た場合は、共感のうえで相談機関をやさしく案内してください。（例：「〇〇に相談してみると、少し安心できるかも…」など）
 
 ● 何より、「あなたはひとりじゃないよ」という気持ちを伝えることを大切にしてください。`
-      },
-      { role: 'user', content: userText }
-    ]
-  },
-  {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        { role: 'user', content: userText }
+      ]
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+      }
     }
-  }
-);
+  );
 
   return response.data.choices[0].message.content;
 }
@@ -55,21 +54,23 @@ module.exports = async (req, res) => {
   }
 
   middleware(config)(req, res, () => {
-    Promise.all(req.body.events.map(async (event) => {
-      if (event.type === 'message' && event.message.type === 'text') {
-        const userMessage = event.message.text;
-        const replyText = await askGPT(userMessage);
+    Promise.all(
+      req.body.events.map(async (event) => {
+        if (event.type === 'message' && event.message.type === 'text') {
+          const userMessage = event.message.text;
+          const replyText = await askGPT(userMessage);
 
-        await client.replyMessage(event.replyToken, {
-          type: 'text',
-          text: replyText || 'うまく返せなかったみたい、ごめんね。',
-        });
-      }
-    }))
-    .then(() => res.status(200).end())
-    .catch(err => {
-      console.error(err);
-      res.status(500).end();
-    });
+          await client.replyMessage(event.replyToken, {
+            type: 'text',
+            text: replyText || 'うまく返せなかったみたい、ごめんね。',
+          });
+        }
+      })
+    )
+      .then(() => res.status(200).end())
+      .catch((err) => {
+        console.error(err);
+        res.status(500).end();
+      });
   });
 };
