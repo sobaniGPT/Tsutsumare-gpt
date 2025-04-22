@@ -126,6 +126,12 @@ module.exports = async (req, res) => {
             type: 'text',
             text: replyText || 'うまく返せなかったみたい、ごめんね。'
           });
+            await db.collection("logs").add({
+              userId,
+              text: userMessage,
+              reply: replyText,
+              timestamp: Date.now()
+            });
         }
       })
     )
