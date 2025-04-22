@@ -1,6 +1,10 @@
+// webhook.js
+
+// 🔗 LINEとaxiosの準備
 const { Client, middleware } = require('@line/bot-sdk');
 const axios = require('axios');
 
+// 🔐 Firebaseの初期化と接続設定（Render環境変数から読み込み）
 const admin = require("firebase-admin");
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
@@ -10,7 +14,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-
+// 🤖 LINE Botの設定
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.LINE_CHANNEL_SECRET,
@@ -18,11 +22,41 @@ const config = {
 
 const client = new Client(config);
 
-async function askGPT(userText) {
+// 📥 FirestoreからGPTモード取得（初回ユーザーはtrialで登録）
+async function getUserMode(userId) {
+  const userRef = db.collection('users').doc(userId);
+  const userDoc = await userRef.get();
+
+  if (!userDoc.exists) {
+    // 初回アクセス：trialで登録
+    await userRef.set({
+      gpt_mode: 'trial',
+      createdAt: Date.now(),
+      lastUsed: Date.now(),
+      note: '初回登録'
+    });
+    return 'trial';
+  }
+
+  // 既存ユーザーの最終アクセス更新
+  await userRef.update({ lastUsed: Date.now() });
+  return userDoc.data().gpt_mode || 'trial';
+}
+
+// 🧠 GPTに質問して返答をもらう関数（gpt_modeによってモデルを切り替え）
+async function askGPT(userText, mode) {
+  const model =
+    mode === 'light' ? 'gpt-3.5-turbo' :
+    mode === 'premium' || mode === 'trial' ? 'gpt-4' : null;
+
+  if (!model) {
+    return 'ツツマレの無料体験は終了しています💡\nご利用を続けたい方はこちらから🍀\n▶︎ https://xxx.base.shop';
+  }
+
   const response = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
-      model: 'gpt-4',
+      model: model,
       messages: [
         {
           role: 'system',
@@ -47,7 +81,6 @@ async function askGPT(userText) {
         { role: 'user', content: userText }
       ]
     },
-    
     {
       headers: {
         'Content-Type': 'application/json',
@@ -59,6 +92,7 @@ async function askGPT(userText) {
   return response.data.choices[0].message.content;
 }
 
+// 🌐 LINEからのWebhookイベントを受け取って処理
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
@@ -68,8 +102,13 @@ module.exports = async (req, res) => {
     Promise.all(
       req.body.events.map(async (event) => {
         if (event.type === 'message' && event.message.type === 'text') {
+          const userId = event.source.userId;
           const userMessage = event.message.text;
-          const replyText = await askGPT(userMessage);
+
+          // gpt_mode（trial/premiumなど）を取得
+          const gptMode = await getUserMode(userId);
+          // GPTに質問＆応答取得
+          const replyText = await askGPT(userMessage, gptMode);
 
           await client.replyMessage(event.replyToken, {
             type: 'text',
