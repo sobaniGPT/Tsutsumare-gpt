@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ツツマレ管理画面</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f7f7f7; }
+    h1 { margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 10px; border: 1px solid #ccc; }
+    th { background: #eee; }
+    tr:nth-child(even) { background: #fafafa; }
+  </style>
+</head>
+<body>
+  <h1>ツツマレ：ユーザー管理</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>GPTモード</th>
+        <th>作成日</th>
+        <th>最終利用</th>
+        <th>備考</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% users.forEach(user => { %>
+        <tr>
+          <td><%= user.id %></td>
+          <td><%= user.gpt_mode %></td>
+          <td><%= new Date(user.createdAt).toLocaleString() %></td>
+          <td><%= new Date(user.lastUsed).toLocaleString() %></td>
+          <td><%= user.note || '' %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>
+

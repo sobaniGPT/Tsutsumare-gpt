@@ -1,3 +1,6 @@
+require('dotenv').config();
+
+
 // webhook.js
 
 // 🔗 LINEとaxiosの準備
