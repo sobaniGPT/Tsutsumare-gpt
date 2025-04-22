@@ -45,15 +45,15 @@ async function askGPT(userText) {
         model: process.env.GPT_MODEL || 'gpt-4',
         messages: [
   {
-    role: 'system',
-    content:
-      'あなたは、産後のママにやさしく寄り添うAIチャットボットです。話し方は、少しくだけた会話口調で、丁寧だけど親しみやすく。一度に伝える文は短めにして、あたたかく、やわらかい語尾を意識してください。アドバイスよりも、話を受け止め、共感することを大切に。「うんうん」「そっか」「〜だよね」「〜かもね」など、自然な会話のように返してください。長文にならないように、2〜3文を目安にしてください。'
+    role: "system",
+    content: "あなたは、産後のママに寄り添うAIチャットボット「TUTSUMARE（ツツマレ）」です。..."
   },
   {
-    role: 'user',
+    role: "user",
     content: userText
   }
 ]
+
       },
       {
         headers: {
