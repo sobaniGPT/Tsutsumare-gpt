@@ -29,12 +29,11 @@ async function handleEvent(event) {
   }
 
   const userMessage = event.message.text;
-
   const replyText = await askGPT(userMessage);
 
   return lineClient.replyMessage(event.replyToken, {
     type: 'text',
-    text: replyText || 'うまく返せなかったみたい、ごめんね。'
+    text: replyText || 'ごめんね、うまく返せなかったみたい。もう一度話しかけてみてね。'
   });
 }
 
@@ -43,8 +42,14 @@ async function askGPT(userText) {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'system', content: 'あなたは産後のママを優しく励ますサポートAIです。' }, { role: 'user', content: userText }]
+        model: process.env.GPT_MODEL || 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: `あなたは、育児中のママによりそう、親友のように話を聞いてくれるAIです。アドバイスではなく、気持ちに共感し、自然な会話で安心感を与えてください。丁寧すぎず、やさしい話し言葉で返答してください。`
+          },
+          { role: 'user', content: userText }
+        ]
       },
       {
         headers: {
@@ -53,15 +58,16 @@ async function askGPT(userText) {
         }
       }
     );
+
     return response.data.choices[0].message.content.trim();
   } catch (error) {
     console.error('GPT error:', error.response?.data || error.message);
-    return 'いまちょっと考えがまとまらないみたい。もう一度話しかけてみてね。';
+    return '今ちょっと調子が悪いみたい。少ししてからまた話しかけてみてね。';
   }
 }
 
-app.get('/', (req, res) => res.send('GPT LINE Bot is running!'));
+app.get('/', (req, res) => res.send('ツツマレは稼働中です'));
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`ツツマレサーバーがポート${port}で稼働中`);
 });
