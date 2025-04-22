@@ -1,6 +1,16 @@
 const { Client, middleware } = require('@line/bot-sdk');
 const axios = require('axios');
 
+const admin = require("firebase-admin");
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const db = admin.firestore();
+
+
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.LINE_CHANNEL_SECRET,
@@ -37,6 +47,7 @@ async function askGPT(userText) {
         { role: 'user', content: userText }
       ]
     },
+    
     {
       headers: {
         'Content-Type': 'application/json',
