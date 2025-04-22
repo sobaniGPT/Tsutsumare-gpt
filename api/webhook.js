@@ -26,21 +26,53 @@ const client = new Client(config);
 async function getUserMode(userId) {
   const userRef = db.collection('users').doc(userId);
   const userDoc = await userRef.get();
+  const now = Date.now();
+  const trialPeriodMs = 14 * 24 * 60 * 60 * 1000; // ← 2週間
+  const oneDayMs = 24 * 60 * 60 * 1000;
 
+  // 新規ユーザー → trial登録
   if (!userDoc.exists) {
-    // 初回アクセス：trialで登録
     await userRef.set({
       gpt_mode: 'trial',
-      createdAt: Date.now(),
-      lastUsed: Date.now(),
+      createdAt: now,
+      lastUsed: now,
       note: '初回登録'
     });
     return 'trial';
   }
 
-  // 既存ユーザーの最終アクセス更新
-  await userRef.update({ lastUsed: Date.now() });
-  return userDoc.data().gpt_mode || 'trial';
+  const data = userDoc.data();
+  const timeSinceCreated = now - (data.createdAt || now);
+  const currentMode = data.gpt_mode || 'trial';
+
+  // モードがtrialで、2週間を過ぎていたらexpiredに変更
+  if (currentMode === 'trial' && timeSinceCreated > trialPeriodMs) {
+    await userRef.update({
+      gpt_mode: 'expired',
+      note: 'trial自動終了',
+      lastUsed: now
+    });
+    return 'expired';
+  }
+
+  // 残り3日・1日ならリマインドメッセージ送信
+  const daysLeft = Math.floor((trialPeriodMs - timeSinceCreated) / oneDayMs);
+
+  if (currentMode === 'trial' && (daysLeft === 3 || daysLeft === 1)) {
+    const reminder = daysLeft === 3
+      ? '無料体験はあと3日です🌱 よかったら、続けて使う準備も考えてみてね。'
+      : '無料体験は明日で終了だよ🍀 気に入ってもらえたら、これからもそばにいさせてね。';
+
+    await client.pushMessage(userId, {
+      type: 'text',
+      text: reminder
+    });
+  }
+
+  // 最終アクセス更新
+  await userRef.update({ lastUsed: now });
+
+  return currentMode;
 }
 
 // 🧠 GPTに質問して返答をもらう関数（gpt_modeによってモデルを切り替え）
